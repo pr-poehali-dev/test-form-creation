@@ -43,8 +43,7 @@ const Index = () => {
     setIsSubmitting(true);
 
     try {
-      const func2url = await import('../../func2url.json');
-      const emailUrl = func2url['send-email'];
+      const emailUrl = 'https://functions.poehali.dev/6b6f608a-6e3c-468c-bb7c-fdb33d6d4c07';
 
       const response = await fetch(emailUrl, {
         method: 'POST',
