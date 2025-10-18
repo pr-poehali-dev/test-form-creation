@@ -17,8 +17,9 @@ const Index = () => {
     question2: '',
     question3: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.firstName || !formData.lastName) {
@@ -39,18 +40,47 @@ const Index = () => {
       return;
     }
 
-    toast({
-      title: "Успешно!",
-      description: "Ваши ответы отправлены"
-    });
+    setIsSubmitting(true);
 
-    setFormData({
-      firstName: '',
-      lastName: '',
-      question1: '',
-      question2: '',
-      question3: ''
-    });
+    try {
+      const func2url = await import('../../func2url.json');
+      const emailUrl = func2url['send-email'];
+
+      const response = await fetch(emailUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast({
+          title: "Успешно!",
+          description: "Ваши ответы отправлены на email"
+        });
+
+        setFormData({
+          firstName: '',
+          lastName: '',
+          question1: '',
+          question2: '',
+          question3: ''
+        });
+      } else {
+        throw new Error(result.error || 'Ошибка отправки');
+      }
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось отправить форму. Попробуйте позже.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -165,10 +195,20 @@ const Index = () => {
 
           <Button 
             type="submit" 
+            disabled={isSubmitting}
             className="w-full h-12 text-base font-medium shadow-md hover:shadow-lg transition-all hover:scale-[1.02]"
           >
-            <Icon name="Send" size={18} className="mr-2" />
-            Отправить ответы
+            {isSubmitting ? (
+              <>
+                <Icon name="Loader2" size={18} className="mr-2 animate-spin" />
+                Отправка...
+              </>
+            ) : (
+              <>
+                <Icon name="Send" size={18} className="mr-2" />
+                Отправить ответы
+              </>
+            )}
           </Button>
         </form>
       </Card>
